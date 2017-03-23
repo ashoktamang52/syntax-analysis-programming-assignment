@@ -229,13 +229,13 @@ void factor() {
       if (nextToken == RIGHT_PAREN)
         lex();
       else
-        error();
+        printf("Error happened.\n"); 
     }  /* End of if (nextToken == ... */
 
     /* It was not an id, an integer literal, or a left
     parenthesis */
     else
-      error();
+      printf("Error happened.\n"); 
   }  /* End of else */
   printf("Exit <factor>\n");;
 }  /* End of function factor */
