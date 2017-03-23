@@ -9,6 +9,9 @@ char nextChar;
 int lexLen;
 int token;
 int nextToken;
+char *line = NULL;
+size_t len = 0;
+ssize_t nread;
 FILE *in_fp, *fopen();
 
 /* Function declarations */ 
@@ -48,13 +51,22 @@ int main(int argc, char *argv[]) {
   } else {
     printf("Usage: \n\n");
     printf("    <parser> <file_name>\n\n");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
 
   /* Open the input data file and process its contents */ 
-  if ((in_fp = fopen(filename, "r")) == NULL)
-    printf("ERROR - cannot open front.in\n"); 
+    if ((in_fp = fopen(filename, "r")) == NULL) {
+        perror("Cannot open the file");
+        exit(EXIT_FAILURE);
+    }
+    
+    while ((nread = getline(&line, &len, in_fp)) != -1) {
+        printf("Retrieved line of length %zu: \n", nread);
+        printf("Line: %s", line);
+    }
+    
+  /*
   else {
     getChar(); 
     do {
@@ -62,6 +74,7 @@ int main(int argc, char *argv[]) {
       expr();
     } while (nextToken != EOF);
   } 
+   */
 }
 
 /*****************************************************/
@@ -171,9 +184,8 @@ int lex() {
       break;
 
       /* EOF */
-      case
-        EOF:
-        nextToken = EOF;
+    case EOF:
+      nextToken = EOF;
       lexeme[0] = 'E';
       lexeme[1] = 'O';
       lexeme[2] = 'F';
