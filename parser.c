@@ -2,7 +2,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-/* Global declarations */ /* Variables */
+/* Global declarations */
+/* Variables */
 int charClass;
 char lexeme [100];
 char nextChar;
@@ -10,9 +11,11 @@ int lexLen;
 int token;
 int nextToken;
 char *line = NULL;
+int lineIndex;
 size_t len = 0;
 ssize_t nread;
 FILE *in_fp, *fopen();
+int global_break;
 
 /* Function declarations */
 void addChar();
@@ -60,21 +63,22 @@ int main(int argc, char *argv[]) {
         perror("Cannot open the file");
         exit(EXIT_FAILURE);
     }
-    
     while ((nread = getline(&line, &len, in_fp)) != -1) {
         printf("Retrieved line of length %zu: \n", nread);
         printf("Line: %s", line);
+        lineIndex = 0;
+        global_break = 1;
+        getChar();
+        /* Check if there is any global error */
+        if (global_break != 0 && line != NULL) {
+            do {
+                lex();
+                expr();
+            } while (nextToken != EOF);
+        } else {
+            break;
+        }
     }
-    
-    /*
-     else {
-     getChar();
-     do {
-     lex();
-     expr();
-     } while (nextToken != EOF);
-     }
-     */
 }
 
 /*****************************************************/
@@ -129,16 +133,26 @@ void addChar() {
 /* getChar - a function to get the next character of
  input and determine its character class */
 void getChar() {
-    if ((nextChar = getc(in_fp)) != EOF) {
-        if (isalpha(nextChar))
-            charClass = LETTER;
-        else if (isdigit(nextChar))
-            charClass = DIGIT;
-        else
-            charClass = UNKNOWN;
+    if (lineIndex < nread) {
+        nextChar = line[lineIndex];
+        lineIndex++;
+        
+        if (nextChar != '\n') {
+            if (isalpha(nextChar))
+                charClass = LETTER;
+            else if (isdigit(nextChar))
+                charClass = DIGIT;
+            else
+                charClass = UNKNOWN;
+        }
+        else {
+            charClass = EOF;
+            global_break = 0;
+        }
+
+    } else {
+        global_break = 0;  /* Set to true. */
     }
-    else
-        charClass = EOF;
 }
 
 /*****************************************************/
