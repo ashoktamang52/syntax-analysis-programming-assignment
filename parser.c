@@ -12,7 +12,6 @@ int lexLen;
 int token;
 int nextToken;
 char *line = NULL;
-char expression_read[100];
 int lineIndex;
 size_t len = 0;
 ssize_t nread;
@@ -27,6 +26,7 @@ int lex();
 void expr();
 void term();
 void factor();
+void error();
 
 /* Character classes */
 #define LETTER 0
@@ -82,6 +82,9 @@ int main(int argc, char *argv[]) {
             break;
         }
     }
+    printf("\nNext token is: %d, Next lexeme is %s\n", nextToken, lexeme);
+    
+    return 0;
 }
 
 /*****************************************************/
@@ -204,6 +207,7 @@ int lex() {
             lexeme[3] = 0;
             break;
     } /* End of switch */
+    
     if (global_break != 0) {
         printf("Next token is: %d, Next lexeme is %s\n", nextToken, lexeme);
     }
@@ -266,10 +270,22 @@ void factor() {
     printf("Enter <factor>\n");
     
     /* Determine which RHS */
-    if (nextToken == IDENT || nextToken == INT_LIT)
-    /* Get the next token */
+    if (nextToken == IDENT) {
+        /* Get the next token */
         lex();
-    
+        if (nextToken == INT_LIT || nextToken == IDENT) {
+            error();
+            return;
+        }
+    }
+    else if (nextToken == INT_LIT) {
+        /* Get the next token */
+        lex();
+        if (nextToken == IDENT || nextToken == INT_LIT) {
+            error();
+            return;
+        }
+    }
     /* If the RHS is ( <expr>), call lex to pass over the
      left parenthesis, call expr, and check for the right
      parenthesis */
@@ -280,11 +296,7 @@ void factor() {
             if (nextToken == RIGHT_PAREN)
                 lex();
             else {
-                printf("Error happened.\n");
-                strncpy(expression_read, line, lineIndex - 1);
-                printf("Expression read so far: %s", expression_read);
-                printf("Lexeme already read: %s\n", lexeme);
-                global_break = 0; /* to move to next expression */
+                error();
                 return;
             }
         }  /* End of if (nextToken == ... */
@@ -292,14 +304,20 @@ void factor() {
         /* It was not an id, an integer literal, or a left
          parenthesis */
         else {
-            printf("Error happened.\n");
-            strncpy(expression_read, line, lineIndex - 1);
-            printf("Expression read so far: %s\n", expression_read);
-            printf("Syntax Error occured at: %s\n", lexeme);
-            global_break = 0;
+            error();
             return;
         }
     }  /* End of else */
     if (global_break != 0)
         printf("Exit <factor>\n");;
 }  /* End of function factor */
+
+void error() {
+    printf("Syntax Error.\n");
+    char expression_read[100];
+    strncpy(expression_read, line, lineIndex);
+    expression_read[lineIndex] = '\0';
+    printf("Expression read so far: %s\n", expression_read);
+    printf("Syntax Error occured at: %s\n", lexeme);
+    global_break = 0; /* to move to next expression */
+}
