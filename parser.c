@@ -63,9 +63,10 @@ int main(int argc, char *argv[]) {
         perror("Cannot open the file");
         exit(EXIT_FAILURE);
     }
+    int expression = 0;
     while ((nread = getline(&line, &len, in_fp)) != -1) {
-        printf("Retrieved line of length %zu: \n", nread);
-        printf("Line: %s", line);
+        printf("\nExpression no. %d: \n", expression + 1);
+        expression++;
         lineIndex = 0;
         global_break = 1;
         getChar();
@@ -175,7 +176,7 @@ int lex() {
             nextToken = IDENT;
             break;
             
-            /* Parsei nteger literals */
+            /* Parse integer literals */
         case DIGIT:
             addChar();
             getChar();
@@ -201,7 +202,9 @@ int lex() {
             lexeme[3] = 0;
             break;
     } /* End of switch */
-    printf("Next token is: %d,Next lexeme is %s\n", nextToken, lexeme);
+    if (global_break != 0) {
+        printf("Next token is: %d, Next lexeme is %s\n", nextToken, lexeme);
+    }
     return nextToken;
 } /* End of function lex */
 
@@ -210,17 +213,23 @@ int lex() {
  <expr> -> <term> {(+ | -) <term>}
  */
 void expr() {
-    printf("Enter <expr>\n");
-    
-    /* Parse the first term */
-    term();
-    /* As long as the next token is + or -, get
-     the next token and parse the next term */
-    while (nextToken == ADD_OP || nextToken == SUB_OP) {
-        lex();
+    if (global_break != 0) {
+        printf("Enter <expr>\n");
+        
+        /* Parse the first term */
         term();
+        /* As long as the next token is + or -, get
+         the next token and parse the next term */
+        while (nextToken == ADD_OP || nextToken == SUB_OP) {
+            lex();
+            term();
+        }
+        if (global_break != 0)
+            printf("Exit <expr>\n");
+    } else {
+        return;
     }
-    printf("Exit <expr>\n");
+    
 }  /* End of function expr */
 
 /* term
@@ -228,18 +237,23 @@ void expr() {
  <term> -> <factor> {(* | /) <factor>)
  */
 void term() {
-    printf("Enter <term>\n");
-    
-    /* Parse the first factor */
-    factor();
-    
-    /* As long as the next token is * or /,
-     get the next token and parse the next factor */
-    while (nextToken == MULT_OP || nextToken == DIV_OP) {
-        lex();
+    if (global_break != 0) {
+        printf("Enter <term>\n");
+        
+        /* Parse the first factor */
         factor();
+        
+        /* As long as the next token is * or /,
+         get the next token and parse the next factor */
+        while (nextToken == MULT_OP || nextToken == DIV_OP) {
+            lex();
+            factor();
+        }
+        if (global_break != 0)
+            printf("Exit <term>\n");
+    } else {
+        return;
     }
-    printf("Exit <term>\n");
 }  /* End of function term */
 
 /* factor
@@ -263,14 +277,23 @@ void factor() {
             expr();
             if (nextToken == RIGHT_PAREN)
                 lex();
-            else
-                printf("Error happened.\n"); 
+            else {
+                printf("Error happened.\n");
+                printf("Lexeme already read: %s\n", lexeme);
+                global_break = 0; /* to move to next expression */
+                return;
+            }
         }  /* End of if (nextToken == ... */
         
         /* It was not an id, an integer literal, or a left
          parenthesis */
-        else
-            printf("Error happened.\n"); 
+        else {
+            printf("Error happened.\n");
+            printf("Syntax Error occured at: %s\n", lexeme);
+            global_break = 0;
+            return;
+        }
     }  /* End of else */
-    printf("Exit <factor>\n");;
+    if (global_break != 0)
+        printf("Exit <factor>\n");;
 }  /* End of function factor */
