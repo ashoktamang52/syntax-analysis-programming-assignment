@@ -133,24 +133,19 @@ void addChar() {
 /* getChar - a function to get the next character of
  input and determine its character class */
 void getChar() {
-    if (lineIndex < nread) {
+    // nread provides EOF error from getline() in main. [Global]
+    if (nread != -1 && lineIndex < nread && line[lineIndex] != '\n') {
         nextChar = line[lineIndex];
         lineIndex++;
-        
-        if (nextChar != '\n') {
-            if (isalpha(nextChar))
-                charClass = LETTER;
-            else if (isdigit(nextChar))
-                charClass = DIGIT;
-            else
-                charClass = UNKNOWN;
-        }
-        else {
-            charClass = EOF;
-            global_break = 0;
-        }
-
+        /* Classify nextChar for Token */
+        if (isalpha(nextChar))
+            charClass = LETTER;
+        else if (isdigit(nextChar))
+            charClass = DIGIT;
+        else
+            charClass = UNKNOWN;
     } else {
+        charClass = EOF;
         global_break = 0;  /* Set to true. */
     }
 }
