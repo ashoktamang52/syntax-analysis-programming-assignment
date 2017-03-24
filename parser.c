@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* Global declarations */
 /* Variables */
@@ -11,6 +12,7 @@ int lexLen;
 int token;
 int nextToken;
 char *line = NULL;
+char expression_read[100];
 int lineIndex;
 size_t len = 0;
 ssize_t nread;
@@ -279,6 +281,8 @@ void factor() {
                 lex();
             else {
                 printf("Error happened.\n");
+                strncpy(expression_read, line, lineIndex - 1);
+                printf("Expression read so far: %s", expression_read);
                 printf("Lexeme already read: %s\n", lexeme);
                 global_break = 0; /* to move to next expression */
                 return;
@@ -289,6 +293,8 @@ void factor() {
          parenthesis */
         else {
             printf("Error happened.\n");
+            strncpy(expression_read, line, lineIndex - 1);
+            printf("Expression read so far: %s\n", expression_read);
             printf("Syntax Error occured at: %s\n", lexeme);
             global_break = 0;
             return;
